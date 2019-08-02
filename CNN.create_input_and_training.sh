@@ -1,3 +1,5 @@
+#!/bin/bash
+
 ##### load torch modules & dependencies
 module load torch/20170221-k80-gcc5.4.0
 module load python/2.7.10-gcc4.9.3
