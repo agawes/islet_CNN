@@ -1,6 +1,7 @@
 library(data.table)
 library(nnet) ## which.is.max function
 library(gage)
+library("DescTools")
 
 setwd("~/Desktop/islets CNN/GWAS_CNN_convergence/")
 
@@ -42,9 +43,12 @@ text_format <- element_text(face = "bold", color="black",size = 16)
 cols <- c("Original"="black","Permuted"="steelblue")
 
 #### going down in PPA from 1.00 to 0.01 in steps of 0.01 - what % of variants are significant <0.05 at this or higher PPA
+cred_df=rbindlist(cred)
 signif_fraction=sapply(seq(from=1,to=0.00,by=-0.01), function(x) 
   length(which(subset(cred_df, PPAg>=x, lowest_Q)[,1]<0.05))/nrow(subset(cred_df, PPAg>=x)))
 plot(1:101,signif_fraction, ylim=c(0,0.6), type="l")
+
+AUC_gPPA=AUC(1:101, signif_fraction)
 
 ### add line for random:
 cred_perm_df=rbindlist(cred_perm)
@@ -57,6 +61,11 @@ for (i in 1:n_perm){
     length(which(subset(cred_perm_df, PPAg>=x,i+5)[,1]<0.05))/nrow(subset(cred_perm_df, PPAg>=x)))
   print(i)
 }
+
+## p-value of this enrichment:
+length(which(apply(signif_fraction_perm, 2, function(x) AUC(1:101,x)) >= AUC_gPPA))/n_perm
+
+### get the enrichment p-value - see in how many permutations AUC is higher than of the real CNN q-values
 
 ppa_df=data.frame(PPA=seq(from=1,to=0.00,by=-0.01), original=signif_fraction,
                   perm_mean=sapply(1:101, function(x) mean(signif_fraction_perm[x,])),
@@ -93,12 +102,18 @@ signif_fraction_FGWAS=sapply(seq(from=1,to=0.00,by=-0.01), function(x)
   length(which(subset(cred_df, FGWAS_PPA>=x & !is.na(FGWAS_PPA), lowest_Q)[,1]<0.05))/nrow(subset(cred_df, FGWAS_PPA>=x & !is.na(FGWAS_PPA))))
 plot(1:101,signif_fraction_FGWAS, ylim=c(0,0.6), type="l")
 
+AUC_fPPA=AUC(1:101, signif_fraction_FGWAS)
+
 signif_fraction_perm_FGWAS=matrix(,nrow=101,ncol=n_perm)
 for (i in 1:n_perm){
   signif_fraction_perm_FGWAS[,i]=sapply(seq(from=1,to=0.00,by=-0.01), function(x) 
     length(which(subset(cred_perm_df, FGWAS_PPA>=x,i+5)[,1]<0.05))/nrow(subset(cred_perm_df, FGWAS_PPA>=x)))
   print(i)
 }
+
+## p-value of this enrichment:
+length(which(apply(signif_fraction_perm_FGWAS, 2, function(x) AUC(1:101,x)) >= AUC_fPPA))/n_perm
+
 
 ppa_FGWAS_df=data.frame(PPA=seq(from=1,to=0.00,by=-0.01), original=signif_fraction_FGWAS,
                   perm_mean=sapply(1:101, function(x) mean(signif_fraction_perm_FGWAS[x,])),
