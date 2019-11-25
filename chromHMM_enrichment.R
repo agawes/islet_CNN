@@ -80,6 +80,11 @@ dev.off()
 
 ####  5/07/19 - make a heatmap instead of barplots:
 colnames(chrom_df)=c("PR","OC","AP","WP","GE","TE","INS","LMR","HET2","LMWE","HET","CWE","CSE","OSE","OWE")
+colnames(chrom_df)=c("Polycomb Repressed","Accessible Chromatin","Active Promoter","Weak Promoter","Genic Enhancer",
+                     "Transcriptional Elongation","Insulator","Low Methylation","Quiescent State",
+                     "Lowly-Methylated Weak Enhancer", "Heterochromatin","Closed Weak Enhancer","Closed Strong Enhancer",
+                     "Open Strong Enhancer","Open Weak Enhancer")
+
 library(reshape)
 chrom_df$Group=rownames(chrom_df)
 chrom_melt=melt(chrom_df)
@@ -87,11 +92,20 @@ chrom_melt=melt(chrom_df)
 chrom_plot=chrom_melt[with(chrom_melt, Group != "lowest_Q" & Group != "log10_lowestQ_plot"),]
 chrom_plot$Group=factor(chrom_plot$Group, levels=c("lowest_repressed_Q","lowest_TF_Q","lowest_open_Q", "lowest_enhancer_Q","lowest_active_Q","lowest_promoter_Q"))
 levels(chrom_plot$Group) = c("Repressed", "TF","Open chromatin","Enhancer","Active","Promoter")
-chrom_plot$Group=factor(chrom_plot$Group, levels=c("Repressed", "TF","Active","Open chromatin","Enhancer","Promoter"))
+chrom_plot$Group=factor(chrom_plot$Group, levels=rev(c("Repressed", "TF","Active","Open chromatin","Enhancer","Promoter")))
 chrom_plot$q_star=cut(chrom_plot$value, breaks=c(-Inf, -3, -2, -1, 1,2,3,Inf), 
                       label=c("***", "**", "*", "", "*","**","***")) 
-chrom_plot$variable=factor(chrom_plot$variable, levels=c("AP","WP","OSE","OWE","CSE","CWE","LMWE","GE",
-                                                         "OC","PR","INS","TE","HET2","HET","LMR"))
+levels(chrom_plot$variable)=c("Polycomb Repressed","Accessible Chromatin","Active Promoter","Weak Promoter","Genic Enhancer",
+                     "Transcriptional Elongation","Insulator","Low Methylation","Quiescent State",
+                     "Lowly-Methylated Weak Enhancer", "Heterochromatin","Closed Weak Enhancer","Closed Strong Enhancer",
+                     "Open Strong Enhancer","Open Weak Enhancer")
+chrom_plot$variable=factor(chrom_plot$variable, levels=rev(c("Active Promoter","Weak Promoter","Open Strong Enhancer",
+                                                         "Open Weak Enhancer","Closed Strong Enhancer","Closed Weak Enhancer",
+                                                         "Lowly-Methylated Weak Enhancer","Genic Enhancer",
+                                                         "Accessible Chromatin","Polycomb Repressed","Insulator",
+                                                         "Transcriptional Elongation","Quiescent State","Heterochromatin",
+                                                         "Low Methylation")))
+
 
 ### trim all values at +/- 100 
 chrom_plot$value[chrom_plot$value<=(-50)] = -50
@@ -106,5 +120,16 @@ p <- ggplot(aes(x=variable, y=Group, fill=value), data=chrom_plot) + geom_tile()
   theme(axis.text.x=element_text(angle = 90, hjust = 0, color="black",size=16),
       axis.text.y=text_format, axis.title=text_format) 
   
+p
+dev.off()
+
+pdf("ChromHMM.enrichment.heatmap.v.pdf", width=8, height=10)
+text_format <- element_text( color="black",size = 14)
+p <- ggplot(aes(x=Group, y=variable, fill=value), data=chrom_plot) + geom_tile() + 
+  scale_fill_gradient2(low="#2C7BB6", mid="white", high="#D7191C") + 
+  geom_text(aes(label=q_star), color="black", size=3) + 
+  labs(x="CNN feature group", y="Islet chromatin states", fill="Enrichment\n-log10(p)") + theme_bw() + 
+  theme(axis.text.x=element_text(angle = 90, hjust = 0, color="black",size=16),
+      axis.text.y=text_format, axis.title=text_format) 
 p
 dev.off()
