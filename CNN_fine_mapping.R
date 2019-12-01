@@ -67,9 +67,25 @@ length(levels(finemap_plotting$locus))
 finemap_plotting$lowest_Q[finemap_plotting$lowest_Q==0] = 1e-250
 finemap_plotting=data.frame(finemap_plotting)
 
-pdf("fine_map_plots.040719.pdf",width=10)
-for (l in levels(finemap_plotting$locus)){
-  tmp=finemap_plotting[finemap_plotting$locus==l & (finemap_plotting$Genetic_PPA>=0.01 | finemap_plotting$FGWAS_PPA>=0.01),]
+finemap_plotting$locus_name_plot=sapply(strsplit(as.character(finemap_plotting$locus), split="_"), function(x) 
+  paste(x[1],x[2]))
+
+finemap_plotting$top_feature=rep(NA, nrow(finemap_plotting))
+for(v in as.character(finemap_plotting$variant)){
+ tmp=subset(data, variant==v & lowest_Q<0.05)
+  if(nrow(tmp)>0){
+    names=names(tmp)[which(tmp==tmp$lowest_Q)]
+    names=names[grepl("_q",names)][1]
+    finemap_plotting$top_feature[which(finemap_plotting$variant==v)]=gsub("_q","",names)
+ }
+}
+  
+finemap_plotting$location=sapply(as.character(finemap_plotting$variant), function(x) subset(data, variant==x, pos)[,1])
+                                    
+                                    
+pdf("fine_map_plots.301119.pdf",width=10)
+for (l in unique(finemap_plotting$locus_name_plot)){
+  tmp=finemap_plotting[finemap_plotting$locus_name_plot==l & (finemap_plotting$Genetic_PPA>=0.01 | finemap_plotting$FGWAS_PPA>=0.01),]
   tmp=tmp[order(tmp$pos),]
   width=nrow(tmp)/2
   if (nrow(tmp)<10){width=5}
@@ -82,12 +98,16 @@ for (l in levels(finemap_plotting$locus)){
        cex.lab=1.5, cex.axis=1.5, ylim=c(0,max(-log10(tmp$lowest_Q))+0.25))
   abline(h=-log10(0.05), lty=2, col="red")
   par(xpd=NA,las=2)
-  axis(1,at=c(1:length(tmp$variant)),labels=tmp$variant, tick=F, cex.axis=1.5)
+  axis(1,at=c(1:length(tmp$variant)),labels=paste0(tmp$variant,"\n",tmp$location), tick=F, cex.axis=1.5)
+  ## add text with best feature for the min variant:
+  text(x=which.min(tmp$lowest_Q), y=-log10(tmp$lowest_Q[which.min(tmp$lowest_Q)])*0.9, 
+  tmp$top_feature[which.min(tmp$lowest_Q)])
+  
   par(las=1)
   mtext(l, outer = TRUE, cex = 1.5)
 }
 dev.off()
-
+                                 
 ### Sup. Table 5
 subset(finemap_plotting, FGWAS_PPA>=0.05)
 
