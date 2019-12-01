@@ -107,6 +107,30 @@ for (l in unique(finemap_plotting$locus_name_plot)){
   mtext(l, outer = TRUE, cex = 1.5)
 }
 dev.off()
+             
+### Fig5A
+pdf("Fig5A.PROX1.pdf",width=3)
+l="PROX1 rs79687284"
+  tmp=finemap_plotting[finemap_plotting$locus_name_plot==l & (finemap_plotting$Genetic_PPA>=0.01 | finemap_plotting$FGWAS_PPA>=0.01),]
+  tmp=tmp[order(tmp$pos),]
+  width=nrow(tmp)/2
+  if (nrow(tmp)<10){width=5}
+  par(mar=c(1.2,7,1,1), oma=c(8,1,4,1), mfrow=c(3,1), xpd=F, mgp=c(3.5,1,0))
+  plot(1:length(tmp$variant), tmp$Genetic_PPA, pch=21,cex=2, col="black",bg="cornflowerblue", xaxt="n",xlab="",ylab="Genetic PPA", 
+       cex.lab=1.5, cex.axis=1.5, ylim=c(0,max(tmp$Genetic_PPA)+0.1), xlim=c(0.5,2.5))
+  plot(1:length(tmp$variant), tmp$FGWAS_PPA, pch=21, cex=2,col="black",bg="darkolivegreen3", xaxt="n",xlab="",ylab="Functional PPA", 
+       cex.lab=1.5, cex.axis=1.5, ylim=c(0,max(tmp$FGWAS_PPA,na.rm=T)+0.1), xlim=c(0.5,2.5))
+  plot(1:length(tmp$variant), -log10(tmp$lowest_Q), pch=21,cex=2, col="black",bg="coral", xaxt="n",xlab="",ylab="-log10 CNN lowest Q", 
+       cex.lab=1.5, cex.axis=1.5, ylim=c(0,max(-log10(tmp$lowest_Q))+5), xlim=c(0.5,2.5))
+  abline(h=-log10(0.05), lty=2, col="red")
+  par(xpd=NA,las=2)
+  axis(1,at=c(1:length(tmp$variant)),labels=paste0(tmp$variant,"\n",tmp$location), tick=F, cex.axis=1.5)
+  
+  par(las=1)
+  mtext(l, outer = TRUE, cex = 1)
+
+dev.off()
+                                
                                  
 ### Sup. Table 5
 subset(finemap_plotting, FGWAS_PPA>=0.05)
