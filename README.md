@@ -10,7 +10,7 @@
 
 [AUC per feature - per net](CNN.per_feature_AUC.Basset.sh)
   
-[Validation set performance](validation_set.performance.sh)
+[Test set performance](validation_set.performance.sh)
 
 [AUROC & AUPRC boxplots](AUROC_AUPRC.1000net_summary.R)
   
