@@ -1,5 +1,5 @@
 act=read.table("data/learn_islets_act.txt")
-act=act[grep("chr2:",rownames(act)),]
+act=act[grep("chr1:",rownames(act)),]
 
 features=read.table("data/samples.txt")
 features=as.character(features$V1)
@@ -7,7 +7,7 @@ features=as.character(features$V1)
 library("PRROC")
 library(calibrate)
 
-files<-list.files(path=".", patter=".validation.txt$",recursive=TRUE)
+files<-list.files(path=".", patter=".test.txt$",recursive=TRUE)
 
 cnn_res = matrix(,nrow=1000, ncol=60)
 for(i in 1:length(files)){
@@ -19,12 +19,12 @@ for(i in 1:length(files)){
 		cnn_res[i,2*f]= pr$auc.integral
 	}
 }
-rownames(cnn_res)=gsub("runs/validation_set_predictions/iter","", gsub(".validation.txt", "",files))
+rownames(cnn_res)=gsub("runs/test_set_predictions/iter","", gsub(".test.txt", "",files))
 cnn_res=data.frame(cnn_res)
 colnames(cnn_res)[seq(from=1,to=59,by=2)]=paste0(features,"_AUROC")
 colnames(cnn_res)[seq(from=2,to=60,by=2)]=paste0(features,"_AUPRC")
 
-write.table(cnn_res, file="1000nets.AUC_ROC_PR.chr2.txt",sep="\t",quote=F)
+write.table(cnn_res, file="1000nets.AUC_ROC_PR.chr1.txt",sep="\t",quote=F)
 
 
 # find mean, min, max - ROC and PR AUC
@@ -33,8 +33,9 @@ features=as.character(features$V1)
 roc_AUC=data.frame(features=features, mean_ROC_AUC=apply(cnn_res, 2, mean)[seq(from=1,to=59,by=2)], min_ROC_AUC=apply(cnn_res, 2, min)[seq(from=1,to=59,by=2)], max_ROC_AUC=apply(cnn_res, 2, max)[seq(from=1,to=59,by=2)], sd_ROC_AUC=apply(cnn_res, 2, sd)[seq(from=1,to=59,by=2)])
 pr_AUC=data.frame(features=features, mean_ROC_AUC=apply(cnn_res, 2, mean)[seq(from=2,to=60,by=2)], min_ROC_AUC=apply(cnn_res, 2, min)[seq(from=2,to=60,by=2)], max_ROC_AUC=apply(cnn_res, 2, max)[seq(from=2,to=60,by=2)], sd_ROC_AUC=apply(cnn_res, 2, sd)[seq(from=2,to=60,by=2)])
 
-write.table(cbind(roc_AUC, pr_AUC), file="1000nets.AUC_summary.txt", sep="\t",quote=F,row.names=F)
+write.table(cbind(roc_AUC, pr_AUC), file="1000nets.AUC_summary.test_set.txt", sep="\t",quote=F,row.names=F)
 
+#### OTHER CODE ### 
 
 ## find the best overall performing network and plot the representative ROC and PR curves for each feature
 head(sort(apply(cnn_res,1,mean),decreasing=T))
